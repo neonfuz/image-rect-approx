@@ -1,0 +1,7 @@
+
+number of bits in 512x512 image
+512 * 512 * 3 * 8
+6291456
+cram into 32 bits
+6291456 / 32 =
+196608
