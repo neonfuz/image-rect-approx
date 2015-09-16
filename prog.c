@@ -89,8 +89,8 @@ int main(int argc, char *argv[])
 		SDL_FreeSurface(new);
 
 		int ticks = SDL_GetTicks();
-		if(new_diff < old_diff) {
-//		if(ticks - oldTicks >= 60) { // 30ms/f ~= 15fps
+//		if(new_diff < old_diff) { // display every change
+		if(ticks - oldTicks >= 60) { // display every 30ms/f ~= 15fps
 			oldTicks = ticks;
 
 			++frames;
