@@ -29,6 +29,8 @@ void modify(SDL_Surface *sur, FILE *random)
 
 	r.x = (fgetc(random) << 8 | fgetc(random)) % (sur->w) - (block/2);
 	r.y = (fgetc(random) << 8 | fgetc(random)) % (sur->h) - (block/2);
+	r.w = (fgetc(random) << 8 | fgetc(random)) % (sur->w);
+	r.h = (fgetc(random) << 8 | fgetc(random)) % (sur->h);
 	r.w = block;
 	r.h = block;
 
@@ -45,20 +47,29 @@ SDL_Renderer *ren;
 int main(int argc, char *argv[])
 {
 	char *filename;
+	char *filename2;
 
-	if(argc < 2)
-		filename = "image.bmp";
-	else
+	if(argc > 1)
 		filename = argv[1];
+	else
+		filename = "image.bmp";
 
+	if(argc > 2)
+		filename2 = argv[2];
+	else
+		filename2 = NULL;
 
     SDL_Init(SDL_INIT_VIDEO);
 
 	FILE *urandom = fopen("/dev/urandom", "rb");
 
 	SDL_Surface *target = SDL_LoadBMP(filename);
-	SDL_Surface *sur = SDL_CreateRGBSurface(
-		0, target->w, target->h, 24, 0, 0, 0, 0);
+	SDL_Surface *sur;
+	if(filename2)
+		sur = SDL_LoadBMP(filename2);
+	else
+		sur = SDL_CreateRGBSurface(
+			0, target->w, target->h, 24, 0, 0, 0, 0);
 
 	SDL_Rect rect = {0, 0, sur->w, sur->h};
 //	SDL_FillRect(sur, &rect, 0xFF888888);
@@ -88,14 +99,21 @@ int main(int argc, char *argv[])
 
 		SDL_FreeSurface(new);
 
+		double percent;
+		static double curPercent = 10;
+
 		int ticks = SDL_GetTicks();
 //		if(new_diff < old_diff) { // display every change
 		if(ticks - oldTicks >= 60) { // display every 30ms/f ~= 15fps
 			oldTicks = ticks;
+			
+			percent = 100 - 100.0 *
+				(old_diff / (sur->w * sur->h * 3 * 255.0));
 
+			
 			++frames;
-			if(frames%150 == 0)
-				printf("%d\n", old_diff);
+			if(frames%30 == 0) // Revert to 150
+				printf("%.1f%%\n",  percent);
 
 			SDL_Texture *tex;
 			tex = SDL_CreateTextureFromSurface(ren, sur);
@@ -105,8 +123,19 @@ int main(int argc, char *argv[])
 			SDL_DestroyTexture(tex);
 
 			SDL_RenderPresent(ren);
+
+		}
+
+		if(percent > curPercent) {
+			char string[] = " .bmp";
+			string[0] = curPercent/10 - 1 + '0';
+			SDL_SaveBMP(sur, string);
+			curPercent += 10;
+			if(curPercent < 100)
+				break;
 		}
 	}
+
 	
 	SDL_Quit();
     return 0;
