@@ -22,34 +22,6 @@ SDL_Surface *surface_dupe(SDL_Surface *sur)
 	return new;
 }
 
-// Horizontal / vertical line modify function
-void modify2(SDL_Surface *sur, FILE *random)
-{
-	Uint8 isHorizontal = fgetc(random) < 128;
-
-	SDL_Rect r;
-
-	if(isHorizontal) {
-		r.x = 0;
-		r.w = sur->w;
-
-		r.y = (fgetc(random) << 8 | fgetc(random)) % sur->h;
-		r.h = 1;
-	} else {
-		r.y = 0;
-		r.h = sur->h;
-
-		r.x = (fgetc(random) << 8 | fgetc(random)) % sur->w;
-		r.w = 1;
-	}
-
-	Uint32 color =
-		(fgetc(random) << 8 | fgetc(random)) << 16 |
-		(fgetc(random) << 8 | fgetc(random));
-
-	SDL_FillRect(sur, &r, color);
-}
-
 void modify(SDL_Surface *sur, FILE *random)
 {
 	SDL_Rect r;
@@ -131,7 +103,6 @@ int main(int argc, char *argv[])
 			SDL_RenderPresent(ren);
 		}
 	}
-
 	
 	SDL_Quit();
     return 0;
