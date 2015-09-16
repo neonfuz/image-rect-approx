@@ -25,10 +25,10 @@ SDL_Surface *surface_dupe(SDL_Surface *sur)
 void modify(SDL_Surface *sur, FILE *random)
 {
 	SDL_Rect r;
-	Uint8 block = fgetc(random) / 8 + 8;
+	Uint8 block = fgetc(random) / 4 + 8;
 
-	r.x = (fgetc(random) << 8 | fgetc(random)) % (sur->w - block);
-	r.y = (fgetc(random) << 8 | fgetc(random)) % (sur->h - block);
+	r.x = (fgetc(random) << 8 | fgetc(random)) % (sur->w) - (block/2);
+	r.y = (fgetc(random) << 8 | fgetc(random)) % (sur->h) - (block/2);
 	r.w = block;
 	r.h = block;
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 		0, target->w, target->h, 24, 0, 0, 0, 0);
 
 	SDL_Rect rect = {0, 0, sur->w, sur->h};
-	SDL_FillRect(sur, &rect, 0xFF888888);
+//	SDL_FillRect(sur, &rect, 0xFF888888);
 
 	win = SDL_CreateWindow("Test", 0, 0, target->w, target->h, 0);
 	ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_PRESENTVSYNC);
@@ -74,7 +74,6 @@ int main(int argc, char *argv[])
 		while(SDL_PollEvent(&e))
 			if(e.type == SDL_QUIT)
 				loop = 0;
-		++frames;
 
 		SDL_Surface *new = surface_dupe(sur);
 		modify(new, urandom);
@@ -90,8 +89,13 @@ int main(int argc, char *argv[])
 		SDL_FreeSurface(new);
 
 		int ticks = SDL_GetTicks();
-		if(ticks - oldTicks >= 60) { // 30ms/f ~= 15fps
+		if(new_diff < old_diff) {
+//		if(ticks - oldTicks >= 60) { // 30ms/f ~= 15fps
 			oldTicks = ticks;
+
+			++frames;
+			if(frames%150 == 0)
+				printf("%d\n", old_diff);
 
 			SDL_Texture *tex;
 			tex = SDL_CreateTextureFromSurface(ren, sur);
