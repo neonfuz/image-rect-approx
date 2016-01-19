@@ -1,6 +1,7 @@
-#define SCALE 2
-
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
+#define SCALE 2
 
 Uint32 surface_diff(SDL_Surface *a, SDL_Surface *b)
 {
@@ -27,14 +28,10 @@ SDL_Surface *surface_dupe(SDL_Surface *sur)
 void modify(SDL_Surface *sur, FILE *random)
 {
 	SDL_Rect r;
-//	Uint8 block = 4;
-//	Uint8 block = fgetc(random)<64 ? 32 : 4;
 	Uint8 block = fgetc(random) / 4 + 8;
 
 	r.x = (fgetc(random) << 8 | fgetc(random)) % (sur->w) - (block/2);
 	r.y = (fgetc(random) << 8 | fgetc(random)) % (sur->h) - (block/2);
-//	r.w = (fgetc(random) << 8 | fgetc(random)) % (sur->w);
-//	r.h = (fgetc(random) << 8 | fgetc(random)) % (sur->h);
 	r.w = block;
 	r.h = block;
 
@@ -75,10 +72,7 @@ int main(int argc, char *argv[])
 		sur = SDL_CreateRGBSurface(
 			0, target->w, target->h, 24, 0, 0, 0, 0);
 
-	Uint32 init_diff = surface_diff(target, sur);
-
-	SDL_Rect rect = {0, 0, sur->w, sur->h};
-//	SDL_FillRect(sur, &rect, 0xFF888888);
+	Uint32 initial_diff = surface_diff(target, sur);
 
 	win = SDL_CreateWindow("Test", 0, 0, target->w*SCALE, target->h*SCALE, 0);
 	ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_PRESENTVSYNC);
@@ -92,18 +86,6 @@ int main(int argc, char *argv[])
 			if(e.type == SDL_QUIT)
 				loop = 0;
 
-/*
-#define MAX_COPIES 4
-
-		SDL_Surface copies[MAX_COPIES];
-		Uint32 diffs[MAX_COPIES];
-
-		int i;
-		for(i=0; i<MAX_COPIES; ++i) {
-			copies[i] = surface_dupe(sur);
-			
-		}
-*/
 		SDL_Surface *new = surface_dupe(sur);
 		modify(new, urandom);
 		Uint32 old_diff = surface_diff(target, sur);
@@ -121,14 +103,13 @@ int main(int argc, char *argv[])
 		static double curPercent = 10;
 
 		int ticks = SDL_GetTicks();
-//		if(new_diff < old_diff) { // display every change
 		if(ticks - oldTicks >= 60) { // display every 30ms/f ~= 15fps
 			oldTicks = ticks;
-			
-			percent = 100 - 100.0 * old_diff / init_diff; //(sur->w * sur->h * 3 * 255.0)
+
+			percent = 100 - 100.0 * old_diff / initial_diff;
 
 			if(frames%30 == 0)
-				printf("%.1f%%\n",  percent);
+				printf("%.1f%%\n", percent);
 			++frames;
 
 			SDL_Texture *tex;
@@ -139,21 +120,9 @@ int main(int argc, char *argv[])
 			SDL_DestroyTexture(tex);
 
 			SDL_RenderPresent(ren);
-
 		}
-/*
-		if(percent > curPercent) {
-			printf("%f, %f\n", percent, curPercent);
-			char string[] = " .bmp";
-			string[0] = curPercent/10 - 1 + '0';
-			SDL_SaveBMP(sur, string);
-			curPercent += 10;
-			if(curPercent > 100)
-				break;
-				}*/
 	}
 
-	
 	SDL_Quit();
     return 0;
 }
